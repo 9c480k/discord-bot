@@ -1,86 +1,54 @@
-#deez nuts
-from time import sleep 
+import os
+import discord
+import requests
 
-class Tile:
+token = os.environ['TOKEN']
 
-  def __init__(self):
-    self.occupied = "|-|"
+intents = discord.Intents.default()
+intents.message_content = True
 
-  def changeTile(self, symbol):
-    if self.occupied == "|-|":
-      self.occupied = f"|{symbol}|"
-      return True
-    else:
-      return False
+client = discord.Client(intents=intents)
 
-  def __repr__(self):
-    return self.occupied
+def get_image():
+  response = requests.get("https://api.thecatapi.com/v1/images/search")
 
+  
+@client.event
+async def on_ready():
+  print(f"logged in as {client.user}")
 
-board = [[Tile() for i in range(3)] for i in range(3)]
-symbol = ["O","X"]
+@client.event
+async def on_message(message):
+  if message.author == client.user or message.content[0:2] != "m!": 
+    return
 
+  command = message.content[2:]
 
-def display(board): #print function for board 
-  print("   |0||1||2|")
-  for i in range(3):
-    print(f"|{str(i)}|" + "".join([repr(j) for j in board[i]]))
+  if command[0:4] == "spam" and command[5:] != "" and command[4] == " ":
+    returnMessage = []
+    for i in range(300):
+      returnMessage.append(command[5:])
 
-def winDetermination(board):
-  #need to implement diagonal and row check 
-  for i in range(3): #columns 
-    if board[0][i].occupied == board[1][i].occupied and board[0][i].occupied == board[2][i].occupied: 
-      if board[0][i].occupied == symbol[0]: 
-        return 0
-      else:
-        return 1 
-        
-  for i in range(2): #diagonals
-    if board[i*2][0].occupied == board[1][1].occupied and board[i*2][0].occupied == board[(2*(-1*i))][2].occupied: 
-      if board[i*2][0].occupied == symbol[0]: 
-        return 0
-      else: 
-        return 1 
-
-  for i in range(3): #rows 
-    if board[i][0].occupied == board[i][1].occupied and board[i][0].occupied == board[i][2].occupied: 
-      if board[i][0].occupied == symbol[0]: 
-        return 0 
-      else: 
-        return 1 
-  return False 
-
-
-
-for i in range(9):
-  display(board)
-  print("\n")
-  sleep(2)
-  current = symbol[i % 2]
-  while True:
-    try:
-      move = input("enter move (columnrow)")
-      if move.isnumeric() == False or len(move) != 2 or move[0] not in [
-          "0", "1", "2"
-      ] or move[1] not in ["0", "1", "2"]:
-        raise Exception
-      else:
-        currentTile = board[int(move[1])][int(move[0])]
-        if currentTile.changeTile(current) == False:
-          raise Exception
-        else:
-          break
-    except:
-      print("\nMove not found\n")
+    returnMessage = "\n".join(returnMessage)
+    length = len(command[5:]) + 2
+    
+    while len(returnMessage) > 2000:
+      remainder = (2000 // length) * length
+      await message.channel.send(returnMessage[:remainder -1])
       
-    win = winDetermination(board)
-    if win!= False: 
-      print(f"Player {win+1} has won! They were playing {symbol[win]}")
-      break
+      returnMessage = returnMessage[remainder:] 
+      
+      if len(returnMessage) <= 2: 
+        return
 
-#game ends with no wins  
+    await message.channel.send(returnMessage)
+    
+  elif command == "" or command == " ":
+    await message.channel.send("command not received")
 
-sleep(2)
-print("The game has ended in a draw")
-sleep(2)
-print("deez nuts in ur mom")
+  elif command == "cat":
+    await message.channel.send("yes")
+    
+
+
+client.run(token)
