@@ -1,3 +1,3 @@
-# fun-games-and-projects
+# discord-bot
 
-fun repo where i store random stuff 
+a fun discord bot
